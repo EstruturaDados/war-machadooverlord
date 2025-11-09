@@ -16,22 +16,30 @@ typedef struct {
     int numeroTropas;
 } Territorio;
 
+//Protótipos das Funções
+
+//Funções de setup e gerenciamento de memória
 Territorio* alocarMapa(void);
 void inicializarTerritorios(Territorio* mapa);
 void liberarMemoria(Territorio* mapa);
 
+//Funções de interface com o usuário
 void exibirMenuPrincipal(void);
 void exibirMapa(const Territorio* mapa);
 void exibirMissao(int missaoId);
 
+//Funções de lógica principal do jogo
 void faseDeAtaque(Territorio* mapa, const char* corJogador);
 int simularAtaque(Territorio* mapa, int origem, int destino, const char* corJogador);
 int sortearMissao(void);
 int verificarVitoria(const Territorio* mapa, int missaoId, const char* corJogador);
 
+//Função utilitária
 void limparBufferEntrada(void);
 
+//Função Principal (main)
 int main() {
+    //Setup
     setlocale(LC_ALL, "pt_BR.UTF-8");
     srand((unsigned int)time(NULL));
     
@@ -53,8 +61,9 @@ int main() {
     printf("Pressione ENTER para começar...");
     getchar();
     
+    //Game Loop
     do {
-        printf("\n\n= ESTADO DO JOGO =\n\n");
+        printf("\n\n==================== ESTADO DO JOGO ====================\n\n");
         exibirMapa(mapa);
         printf("\n");
         exibirMissao(missaoId);
@@ -99,10 +108,13 @@ int main() {
         
     } while (jogoAtivo);
     
+    //Limpeza
     liberarMemoria(mapa);
     
     return 0;
 }
+
+//Implementação das Funções
 
 Territorio* alocarMapa(void) {
     return (Territorio*)calloc(NUM_TERRITORIOS, sizeof(Territorio));
@@ -206,7 +218,15 @@ void faseDeAtaque(Territorio* mapa, const char* corJogador) {
     scanf("%d", &origem);
     limparBufferEntrada();
     
-    printf("Território de destino: ");
+    printf("\nTerritórios inimigos:\n");
+    for (int i = 0; i < NUM_TERRITORIOS; i++) {
+        if (strcmp(mapa[i].corExercito, corJogador) != 0) {
+            printf("  [%d] %s - %s (%d tropas)\n", 
+                   i, mapa[i].nome, mapa[i].corExercito, mapa[i].numeroTropas);
+        }
+    }
+    
+    printf("\nTerritório de destino: ");
     scanf("%d", &destino);
     limparBufferEntrada();
     
@@ -241,6 +261,7 @@ int simularAtaque(Territorio* mapa, int origem, int destino, const char* corJoga
         return -1;
     }
     
+    // Simula combate com dados
     int dadosAtacante = mapa[origem].numeroTropas - 1;
     if (dadosAtacante > 3) dadosAtacante = 3;
     
@@ -249,10 +270,12 @@ int simularAtaque(Territorio* mapa, int origem, int destino, const char* corJoga
     
     int resultadoAtaque[3], resultadoDefesa[3];
     
+    // Rola dados do atacante
     for (int i = 0; i < dadosAtacante; i++) {
         resultadoAtaque[i] = (rand() % 6) + 1;
     }
     
+    // Rola dados do defensor
     for (int i = 0; i < dadosDefensor; i++) {
         resultadoDefesa[i] = (rand() % 6) + 1;
     }
@@ -277,6 +300,7 @@ int simularAtaque(Territorio* mapa, int origem, int destino, const char* corJoga
         }
     }
     
+    // Exibe resultados
     printf("\nDados do Atacante: ");
     for (int i = 0; i < dadosAtacante; i++) {
         printf("%d ", resultadoAtaque[i]);
@@ -288,6 +312,7 @@ int simularAtaque(Territorio* mapa, int origem, int destino, const char* corJoga
     }
     printf("\n");
     
+    // Compara resultados
     int perdasAtacante = 0, perdasDefensor = 0;
     int comparacoes = (dadosAtacante < dadosDefensor) ? dadosAtacante : dadosDefensor;
     
@@ -305,6 +330,7 @@ int simularAtaque(Territorio* mapa, int origem, int destino, const char* corJoga
     mapa[origem].numeroTropas -= perdasAtacante;
     mapa[destino].numeroTropas -= perdasDefensor;
     
+    // Verifica conquista
     if (mapa[destino].numeroTropas <= 0) {
         strcpy(mapa[destino].corExercito, corJogador);
         mapa[destino].numeroTropas = 1;
